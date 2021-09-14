@@ -1,0 +1,160 @@
+{
+  "version": "0.0.0",
+  "name": "deep_waifu_payment_contract",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "myPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "setParams",
+      "accounts": [
+        {
+          "name": "myPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "priceLamports",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "count",
+          "type": {
+            "option": "u16"
+          }
+        },
+        {
+          "name": "maxCount",
+          "type": {
+            "option": "u16"
+          }
+        },
+        {
+          "name": "beneficiary",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "newAuthority",
+          "type": {
+            "option": "publicKey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "payForMint",
+      "accounts": [
+        {
+          "name": "myPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "beneficiary",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "PaymentStorage",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "priceLamports",
+            "type": "u64"
+          },
+          {
+            "name": "count",
+            "type": "u16"
+          },
+          {
+            "name": "maxCount",
+            "type": "u16"
+          },
+          {
+            "name": "beneficiary",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 300,
+      "name": "NotInitialized",
+      "msg": "Program not initialized."
+    },
+    {
+      "code": 301,
+      "name": "AlreadyInitialized",
+      "msg": "Program already initialized."
+    },
+    {
+      "code": 302,
+      "name": "MaxCountExceeded",
+      "msg": "Max count exceeded."
+    },
+    {
+      "code": 303,
+      "name": "InvalidBeneficiary",
+      "msg": "Invalid beneficiary."
+    }
+  ],
+  "metadata": {
+    "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+  }
+}

@@ -1,8 +1,8 @@
-import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 
-import { SECOND_MILLIS } from "./../constants";
-import { imageController } from "./controllers";
+import { SECOND_MILLIS } from '../constants';
+import { imageController, mintController } from './controllers';
 
 const router = Router();
 
@@ -11,6 +11,13 @@ const selfieLimiter = rateLimit({
   max: 1,
 });
 
-router.post("/selfie2anime", selfieLimiter, imageController.convert);
+const mintLimiter = rateLimit({
+  windowMs: 10 * SECOND_MILLIS,
+  max: 1,
+});
+
+router.post('/selfie2anime', selfieLimiter, imageController.convert);
+
+router.post('/mint', mintLimiter, mintController.mint);
 
 export default router;
