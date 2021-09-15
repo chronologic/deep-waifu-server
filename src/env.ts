@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import web3 from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 
 dotenv.config();
 

@@ -50,5 +50,3 @@ async function main() {
 
   console.log(mintRes);
 }
-
-main();

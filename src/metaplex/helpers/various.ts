@@ -8,6 +8,7 @@ import path from 'path';
 import fs from 'fs';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
+import { IManifest } from '../types';
 
 export const getUnixTs = () => {
   return new Date().getTime() / 1000;
@@ -47,8 +48,8 @@ export function fromUTF8Array(data: number[]) {
   return str;
 }
 
-export function chunks(array, size) {
-  return Array.apply(0, new Array(Math.ceil(array.length / size))).map((_, index) =>
+export function chunks(array: string | any[], size: number) {
+  return Array.apply(0, new Array(Math.ceil(array.length / size))).map((_: any, index: number) =>
     array.slice(index * size, (index + 1) * size)
   );
 }
@@ -62,15 +63,15 @@ export function loadCache(cacheName: string, env: string) {
   return fs.existsSync(path) ? JSON.parse(fs.readFileSync(path).toString()) : undefined;
 }
 
-export function saveCache(cacheName: string, env: string, cacheContent) {
+export function saveCache(cacheName: string, env: string, cacheContent: any) {
   fs.writeFileSync(cachePath(env, cacheName), JSON.stringify(cacheContent));
 }
 
-export function parsePrice(price): number {
+export function parsePrice(price: string): number {
   return Math.ceil(parseFloat(price) * LAMPORTS_PER_SOL);
 }
 
-export async function upload(data: FormData, manifest, index) {
+export async function upload(data: FormData, manifest: IManifest, index: number) {
   console.log(`trying to upload ${index}.png: ${manifest.name}`);
   return await (
     await fetch('https://us-central1-principal-lane-200702.cloudfunctions.net/uploadFile4', {

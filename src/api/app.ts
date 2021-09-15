@@ -20,7 +20,6 @@ app.use(compression());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(formData.parse({ autoClean: true }));
 app.use(morgan('tiny'));
 
 app.use(
@@ -28,6 +27,7 @@ app.use(
     limits: { fileSize: MEGABYTE },
   })
 );
+// app.use(formData.parse({ autoClean: true }));
 
 app.set('port', PORT);
 

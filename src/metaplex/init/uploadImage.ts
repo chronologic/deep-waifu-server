@@ -37,5 +37,3 @@ async function main() {
 
   console.log(res);
 }
-
-main();

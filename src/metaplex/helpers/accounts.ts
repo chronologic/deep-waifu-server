@@ -6,7 +6,7 @@ import {
   TOKEN_METADATA_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from './constants';
-import anchor from '@project-serum/anchor';
+import * as anchor from '@project-serum/anchor';
 import fs from 'fs';
 import BN from 'bn.js';
 import { createConfigAccount } from './instructions';
@@ -97,7 +97,7 @@ export const getMasterEdition = async (mint: anchor.web3.PublicKey): Promise<anc
   )[0];
 };
 
-export function loadWalletKey(keypair): Keypair {
+export function loadWalletKey(keypair: number | fs.PathLike): Keypair {
   return Keypair.fromSecretKey(new Uint8Array(JSON.parse(fs.readFileSync(keypair).toString())));
 }
 

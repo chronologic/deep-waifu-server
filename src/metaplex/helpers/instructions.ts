@@ -6,7 +6,7 @@ import {
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from './constants';
-import anchor from '@project-serum/anchor';
+import * as anchor from '@project-serum/anchor';
 
 export function createAssociatedTokenAccountInstruction(
   associatedTokenAddress: PublicKey,
@@ -58,7 +58,20 @@ export function createAssociatedTokenAccountInstruction(
   });
 }
 
-export async function createConfigAccount(anchorProgram, configData, payerWallet, configAccount) {
+export async function createConfigAccount(
+  anchorProgram: anchor.Program,
+  configData: {
+    maxNumberOfLines: any;
+    symbol?: string;
+    sellerFeeBasisPoints?: number;
+    isMutable?: boolean;
+    maxSupply?: anchor.BN;
+    retainAuthority?: boolean;
+    creators?: { address: PublicKey; verified: boolean; share: number }[];
+  },
+  payerWallet: PublicKey,
+  configAccount: PublicKey
+) {
   const size =
     CONFIG_ARRAY_START +
     4 +

@@ -1,5 +1,5 @@
 import FormData from 'form-data';
-import anchor from '@project-serum/anchor';
+import * as anchor from '@project-serum/anchor';
 import BN from 'bn.js';
 import { MintLayout, Token } from '@solana/spl-token';
 
@@ -420,7 +420,7 @@ export async function createCandyMachine({
   candyMachineId: string;
   candyMachineConfig: string;
 }> {
-  const lamports = parsePrice(price);
+  const lamports = parsePrice(price as any);
   const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
 
   const config = new PublicKey(configAddress);

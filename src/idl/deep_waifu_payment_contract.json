@@ -132,29 +132,7 @@
       }
     }
   ],
-  "errors": [
-    {
-      "code": 300,
-      "name": "NotInitialized",
-      "msg": "Program not initialized."
-    },
-    {
-      "code": 301,
-      "name": "AlreadyInitialized",
-      "msg": "Program already initialized."
-    },
-    {
-      "code": 302,
-      "name": "MaxCountExceeded",
-      "msg": "Max count exceeded."
-    },
-    {
-      "code": 303,
-      "name": "InvalidBeneficiary",
-      "msg": "Invalid beneficiary."
-    }
-  ],
   "metadata": {
-    "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+    "address": "nkZD6NGnpEo2pgNReaVf9sipLyrpwdEyVHvgjpE1tCS"
   }
 }
