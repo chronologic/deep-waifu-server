@@ -46,3 +46,4 @@ data
 *.pdf
 *.sandbox.ts
 target/
+images

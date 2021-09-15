@@ -6,8 +6,8 @@ import { CREATOR_ADDRESS, PAYMENT_PROGRAM_ID } from '../../env';
 import { createLogger } from '../../logger';
 import { getNameAndUri, IManifest, uploadAndMint } from '../../metaplex';
 import { BadRequestError, NotFoundError } from '../errors';
-import { createTimedCache } from '../utils';
-import { createConnection, getPaymentProgramPdaAddress, paymentProgram, walletKeyPair } from './solana';
+import { createMetaplexManifest, createTimedCache } from '../../utils';
+import { createConnection, getPaymentProgramPdaAddress, paymentProgram, walletKeyPair } from '../../solana';
 
 interface IMintParams {
   paymentTx: string;
@@ -135,7 +135,11 @@ async function verifyIdNotUsed(id: number) {
 }
 
 async function mintNft({ selfie, name }: IMintParams, { id, payer }: IMintPaymentTx) {
-  const manifest = createManifest(name, id);
+  const manifest = createMetaplexManifest({
+    name,
+    id,
+    creatorAddress: CREATOR_ADDRESS,
+  });
   await uploadAndMint({
     image: selfie.data,
     index: id - 1,
@@ -143,24 +147,6 @@ async function mintNft({ selfie, name }: IMintParams, { id, payer }: IMintPaymen
     mintToAddress: payer,
     walletKeyPair,
   });
-}
-
-function createManifest(name: string, id: number): IManifest {
-  return {
-    name: `${name} (#${id})`,
-    symbol: 'DWF',
-    description: `Deep Waifu #${id}`,
-    seller_fee_basis_points: 500,
-    collection: {
-      family: 'Deep Waifu',
-      name: 'Deep Waifu Edition 1',
-    },
-    image: 'image.png',
-    properties: {
-      creators: [{ address: CREATOR_ADDRESS, share: 100, verified: true }],
-      files: [{ uri: 'image.png', type: 'image/png' }],
-    },
-  };
 }
 
 export function getStatus(paymentTx: string) {

@@ -1,8 +1,8 @@
 import web3 from '@solana/web3.js';
 import anchor from '@project-serum/anchor';
 
-import { PAYMENT_PROGRAM_ID, SOLANA_ENV, WALLET_PK } from '../../env';
-import paymentIdl from '../../idl/deep_waifu_payment_contract.json';
+import { PAYMENT_PROGRAM_ID, SOLANA_ENV, WALLET_PK } from './env';
+import paymentIdl from './idl/deep_waifu_payment_contract.json';
 
 export function createConnection() {
   return new web3.Connection(web3.clusterApiUrl(SOLANA_ENV), 'confirmed');
