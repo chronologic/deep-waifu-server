@@ -12,12 +12,14 @@ const selfieLimiter = rateLimit({
 });
 
 const mintLimiter = rateLimit({
-  windowMs: 10 * SECOND_MILLIS,
+  windowMs: 30 * SECOND_MILLIS,
   max: 1,
 });
 
 router.post('/selfie2anime', selfieLimiter, imageController.convert);
 
 router.post('/mint', mintLimiter, mintController.mint);
+
+router.get('/mint/:paymentTx', mintController.status);
 
 export default router;

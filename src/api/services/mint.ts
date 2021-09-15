@@ -5,7 +5,7 @@ import { MINUTE_MILLIS } from '../../constants';
 import { CREATOR_ADDRESS, PAYMENT_PROGRAM_ID } from '../../env';
 import { createLogger } from '../../logger';
 import { getNameAndUri, IManifest, uploadAndMint } from '../../metaplex';
-import { BadRequestError } from '../errors';
+import { BadRequestError, NotFoundError } from '../errors';
 import { createTimedCache } from '../utils';
 import { createConnection, getPaymentProgramPdaAddress, paymentProgram, walletKeyPair } from './solana';
 
@@ -161,4 +161,14 @@ function createManifest(name: string, id: number): IManifest {
       files: [{ uri: 'image.png', type: 'image/png' }],
     },
   };
+}
+
+export function getStatus(paymentTx: string) {
+  const res = cache.get(paymentTx);
+
+  if (res) {
+    return res;
+  }
+
+  throw new NotFoundError('Job not found');
 }
