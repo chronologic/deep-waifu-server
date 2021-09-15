@@ -1,7 +1,7 @@
 import web3 from '@solana/web3.js';
 import anchor from '@project-serum/anchor';
 
-import { PAYMENT_PROGRAM_ID, SOLANA_ENV } from '../../env';
+import { PAYMENT_PROGRAM_ID, SOLANA_ENV, WALLET_PK } from '../../env';
 import paymentIdl from '../../idl/deep_waifu_payment_contract.json';
 
 export function createConnection() {
@@ -18,3 +18,5 @@ export async function getPaymentProgramPdaAddress() {
     paymentPubkey
   );
 }
+
+export const walletKeyPair = web3.Keypair.fromSecretKey(new Uint8Array(JSON.parse(WALLET_PK)));

@@ -2,11 +2,12 @@ import { UploadedFile } from 'express-fileupload';
 import queue from 'queue';
 
 import { MINUTE_MILLIS } from '../../constants';
-import { PAYMENT_PROGRAM_ID } from '../../env';
+import { CREATOR_ADDRESS, PAYMENT_PROGRAM_ID } from '../../env';
 import { createLogger } from '../../logger';
+import { getNameAndUri, IManifest, uploadAndMint } from '../../metaplex';
 import { BadRequestError } from '../errors';
 import { createTimedCache } from '../utils';
-import { createConnection, getPaymentProgramPdaAddress, paymentProgram } from './solana';
+import { createConnection, getPaymentProgramPdaAddress, paymentProgram, walletKeyPair } from './solana';
 
 interface IMintParams {
   paymentTx: string;
@@ -16,7 +17,7 @@ interface IMintParams {
 
 interface IMintPaymentTx {
   payer: string;
-  index: number;
+  id: number;
 }
 
 interface IMintResult {
@@ -24,8 +25,10 @@ interface IMintResult {
   message: string;
 }
 
-const cache = createTimedCache<string, IMintResult>(5 * MINUTE_MILLIS);
+const cache = createTimedCache<string, IMintResult>(60 * MINUTE_MILLIS);
 const logger = createLogger('mint');
+
+const MAX_FILE_SIZE_KB = 200;
 
 const q = queue({
   concurrency: 1,
@@ -33,15 +36,21 @@ const q = queue({
 });
 
 export async function pushMintToQueue(params: IMintParams): Promise<void> {
+  validateName(params.name);
+  validateFileSize(params.selfie);
+
   q.push(async () => mint(params));
+  cache.put(params.paymentTx, { status: 'queued', message: `place in line: ${q.length}` });
 }
 
 async function mint({ paymentTx, selfie, name }: IMintParams) {
   let status = 'ok';
   let message = '';
   try {
-    const decodedTx = await decodeAndVerifyTx(paymentTx);
-    await verifyIndexNotUsed(decodedTx.index);
+    cache.put(paymentTx, { status: 'processing', message: '' });
+    const decodedTx = await decodeAndValidateTx(paymentTx);
+    await verifyIdNotUsed(decodedTx.id);
+    await mintNft({ paymentTx, selfie, name }, decodedTx);
   } catch (e) {
     logger.error(e);
     status = 'error';
@@ -51,7 +60,19 @@ async function mint({ paymentTx, selfie, name }: IMintParams) {
   }
 }
 
-async function decodeAndVerifyTx(tx: string): Promise<IMintPaymentTx> {
+function validateName(name: string) {
+  if (name.length > 24) {
+    throw new BadRequestError('Name can be at most 32 chars long');
+  }
+}
+
+function validateFileSize(selfie: UploadedFile) {
+  if (selfie.size > MAX_FILE_SIZE_KB * 1024) {
+    throw new BadRequestError(`Max allowed file size is ${MAX_FILE_SIZE_KB}kB`);
+  }
+}
+
+async function decodeAndValidateTx(tx: string): Promise<IMintPaymentTx> {
   const connection = createConnection();
   const { meta, transaction } = await connection.getTransaction(tx);
 
@@ -71,10 +92,10 @@ async function decodeAndVerifyTx(tx: string): Promise<IMintPaymentTx> {
     throw new BadRequestError('Invalid payment tx: payment logs missing');
   }
 
-  const { payer, index } = extractPayerAndIndexFromLogs(logs);
+  const { payer, id } = extractPayerAndIdFromLogs(logs);
 
-  if (!payer || !index) {
-    throw new BadRequestError('Invalid payment tx: payer and/or index missing');
+  if (!payer || !id) {
+    throw new BadRequestError('Invalid payment tx: payer and/or id missing');
   }
 
   const [pdaPubkey] = await getPaymentProgramPdaAddress();
@@ -89,7 +110,7 @@ async function decodeAndVerifyTx(tx: string): Promise<IMintPaymentTx> {
     throw new BadRequestError('Invalid payment tx: invalid payment amount');
   }
 
-  return { payer, index };
+  return { payer, id };
 }
 
 function extractLogs(logMessages: string[]): string[] {
@@ -99,14 +120,45 @@ function extractLogs(logMessages: string[]): string[] {
   return logMessages.slice(startIndex, endIndex);
 }
 
-function extractPayerAndIndexFromLogs(logMessages: string[]): IMintPaymentTx {
+function extractPayerAndIdFromLogs(logMessages: string[]): IMintPaymentTx {
   const paymentRegex = /\[([A-Za-z0-9]{44}):([0-9]{1,4})\]/;
   const msg = logMessages.find((msg) => msg.includes('Paid for mint'));
-  const [_, payer, index] = msg.match(paymentRegex);
+  const [_, payer, id] = msg.match(paymentRegex);
 
-  return { payer, index: Number(index) };
+  return { payer, id: Number(id) };
 }
 
-async function verifyIndexNotUsed(index: number) {
-  // todo: implementme
+async function verifyIdNotUsed(id: number) {
+  const { uri } = await getNameAndUri({ index: id - 1, walletKeyPair });
+
+  return !uri.startsWith('http');
+}
+
+async function mintNft({ selfie, name }: IMintParams, { id, payer }: IMintPaymentTx) {
+  const manifest = createManifest(name, id);
+  await uploadAndMint({
+    image: selfie.data,
+    index: id - 1,
+    manifest,
+    mintToAddress: payer,
+    walletKeyPair,
+  });
+}
+
+function createManifest(name: string, id: number): IManifest {
+  return {
+    name: `${name} (#${id})`,
+    symbol: 'DWF',
+    description: `Deep Waifu #${id}`,
+    seller_fee_basis_points: 500,
+    collection: {
+      family: 'Deep Waifu',
+      name: 'Deep Waifu Edition 1',
+    },
+    image: 'image.png',
+    properties: {
+      creators: [{ address: CREATOR_ADDRESS, share: 100, verified: true }],
+      files: [{ uri: 'image.png', type: 'image/png' }],
+    },
+  };
 }

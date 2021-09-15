@@ -40,6 +40,7 @@
     ],
     "func-names": ["error", "never"],
     "arrow-parens": ["error", "always"],
+    "arrow-body-style": "off",
     "semi": "error",
     "no-extra-semi": 0,
     "no-use-before-define": "off",
@@ -62,6 +63,7 @@
     "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "no-restricted-syntax": "off",
     "no-await-in-loop": "off",
+    "no-return-await": "off",
     "operator-linebreak": "off",
     "max-len": [
       "error",

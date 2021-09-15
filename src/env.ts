@@ -14,3 +14,7 @@ export const MODEL_URL = process.env.MODEL_URL as string;
 export const SOLANA_ENV = process.env.SOLANA_ENV as web3.Cluster;
 
 export const PAYMENT_PROGRAM_ID = process.env.PAYMENT_PROGRAM_ID as string;
+
+export const WALLET_PK = process.env.WALLET_PK as string;
+
+export const CREATOR_ADDRESS = process.env.CREATOR_ADDRESS as string;
