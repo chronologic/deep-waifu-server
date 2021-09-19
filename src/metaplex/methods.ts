@@ -2,9 +2,9 @@ import FormData from 'form-data';
 import * as anchor from '@project-serum/anchor';
 import BN from 'bn.js';
 import { MintLayout, Token } from '@solana/spl-token';
+import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
 
 import { fromUTF8Array, parsePrice, upload } from './helpers/various';
-import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
 import { createAssociatedTokenAccountInstruction } from './helpers/instructions';
 import {
   CONFIG_ARRAY_START,
@@ -23,73 +23,43 @@ import {
   loadAnchorProgram,
 } from './helpers/accounts';
 import { Config, IManifest } from './types';
-import { METAPLEX_CONFIG_ADDRESS, METAPLEX_CONFIG_UUID, SOLANA_ENV } from './env';
+import { CANDY_MACHINE_CONFIG_ADDRESS, CANDY_MACHINE_CONFIG_UUID, SOLANA_ENV } from './env';
 
 export async function initializeConfig({
   maxItems,
   walletKeyPair,
   env,
   manifest,
-  image,
 }: {
   maxItems: number;
   walletKeyPair: anchor.web3.Keypair;
   env: string;
   manifest: IManifest;
-  image: Buffer;
 }): Promise<{
   configUuid: string;
   configAddress: string;
-  imageUri: string;
 }> {
-  const index = 0;
-
   const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
 
-  let config;
-  let configUuid = '';
-  let configAddress = '';
-
-  console.log('initializing config');
-  try {
-    const res = await createConfig(anchorProgram, walletKeyPair, {
-      maxNumberOfLines: new BN(maxItems),
-      symbol: manifest.symbol,
-      sellerFeeBasisPoints: manifest.seller_fee_basis_points,
-      isMutable: true,
-      maxSupply: new BN(0),
-      retainAuthority: true,
-      creators: manifest.properties.creators.map((creator) => {
-        return {
-          address: new PublicKey(creator.address),
-          verified: true,
-          share: creator.share,
-        };
-      }),
-    });
-    configUuid = res.uuid;
-    configAddress = res.config.toBase58();
-    config = res.config;
-
-    console.log(`initialized config for a candy machine with uuid: ${res.uuid}`);
-  } catch (exx) {
-    console.error('Error deploying config to Solana network.', exx);
-    // console.error(exx);
-  }
-
-  const res = await uploadImageAndAddConfigLine({
-    walletKeyPair,
-    configAddress,
-    env,
-    image,
-    index: 0,
-    manifest,
+  const res = await createConfig(anchorProgram, walletKeyPair, {
+    maxNumberOfLines: new BN(maxItems),
+    symbol: manifest.symbol,
+    sellerFeeBasisPoints: manifest.seller_fee_basis_points,
+    isMutable: true,
+    maxSupply: new BN(0),
+    retainAuthority: true,
+    creators: manifest.properties.creators.map((creator) => {
+      return {
+        address: new PublicKey(creator.address),
+        verified: true,
+        share: creator.share,
+      };
+    }),
   });
 
   return {
-    configUuid,
-    configAddress,
-    imageUri: res.link,
+    configUuid: res.uuid,
+    configAddress: res.config.toBase58(),
   };
 }
 
@@ -100,8 +70,8 @@ export async function uploadAndMint({
   index,
   mintToAddress,
   env = SOLANA_ENV,
-  configAddress = METAPLEX_CONFIG_ADDRESS,
-  configUuid = METAPLEX_CONFIG_UUID,
+  configAddress = CANDY_MACHINE_CONFIG_ADDRESS,
+  configUuid = CANDY_MACHINE_CONFIG_UUID,
 }: {
   walletKeyPair: anchor.web3.Keypair;
   manifest: IManifest;
@@ -250,6 +220,7 @@ export async function initConfigLines({
       lines.push({ uri: link, name });
     }
 
+    console.log(`initializing config lines ${i}-${i + stepSize - 1}...`);
     await anchorProgram.rpc.addConfigLines(i, lines, {
       accounts: {
         config,
@@ -331,8 +302,8 @@ export async function uploadImageAndManifest({
 
 export async function verify({
   walletKeyPair,
-  env,
-  configAddress,
+  env = SOLANA_ENV,
+  configAddress = CANDY_MACHINE_CONFIG_ADDRESS,
 }: {
   walletKeyPair: anchor.web3.Keypair;
   env: string;
@@ -374,7 +345,7 @@ export async function getNameAndUri({
   walletKeyPair,
   index,
   env = SOLANA_ENV,
-  configAddress = METAPLEX_CONFIG_ADDRESS,
+  configAddress = CANDY_MACHINE_CONFIG_ADDRESS,
 }: {
   walletKeyPair: anchor.web3.Keypair;
   index: number;
@@ -501,7 +472,7 @@ export async function mintOneToken({
   configUuid: string;
   configAddress: string;
   mintToAddress: string;
-}): Promise<{ tx: string }> {
+}): Promise<string> {
   const mint = Keypair.generate();
 
   const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
@@ -564,5 +535,5 @@ export async function mintOneToken({
     ],
   });
 
-  return { tx };
+  return tx;
 }

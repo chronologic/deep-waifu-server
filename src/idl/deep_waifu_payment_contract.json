@@ -127,12 +127,16 @@
           {
             "name": "authority",
             "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
     }
   ],
   "metadata": {
-    "address": "nkZD6NGnpEo2pgNReaVf9sipLyrpwdEyVHvgjpE1tCS"
+    "address": "deepDCigiqV6vbvjbXQRvYsQGcWc7ynVgVo3qBAj2DJ"
   }
 }

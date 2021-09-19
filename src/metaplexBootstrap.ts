@@ -15,11 +15,15 @@ async function main() {
     creatorAddress: CREATOR_ADDRESS,
   });
 
-  await bootstrap({
+  const res = await bootstrap({
     walletKeyPair,
     image,
     manifest,
     env: SOLANA_ENV,
     items: 10,
   });
+
+  console.log(res);
+
+  fs.writeFileSync(`./${res.candyMachineId}.json`, JSON.stringify(res, null, 2));
 }

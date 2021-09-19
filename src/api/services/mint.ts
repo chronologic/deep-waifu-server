@@ -7,10 +7,10 @@ import { createLogger } from '../../logger';
 import { getNameAndUri, IManifest, uploadAndMint } from '../../metaplex';
 import { BadRequestError, NotFoundError } from '../errors';
 import { createMetaplexManifest, createTimedCache } from '../../utils';
-import { createConnection, getPaymentProgramPdaAddress, paymentProgram, walletKeyPair } from '../../solana';
+import { provider, getPaymentProgramPdaAddress, paymentProgram, walletKeyPair } from '../../solana';
 
 interface IMintParams {
-  paymentTx: string;
+  tx: string;
   selfie: UploadedFile;
   name: string;
 }
@@ -29,6 +29,7 @@ const cache = createTimedCache<string, IMintResult>(60 * MINUTE_MILLIS);
 const logger = createLogger('mint');
 
 const MAX_FILE_SIZE_KB = 200;
+const MAX_NAME_LENGTH = 24;
 
 const q = queue({
   concurrency: 1,
@@ -39,30 +40,41 @@ export async function pushMintToQueue(params: IMintParams): Promise<void> {
   validateName(params.name);
   validateFileSize(params.selfie);
 
+  logger.info(`[${params.tx}] 🗄 adding to queue...`);
   q.push(async () => mint(params));
-  cache.put(params.paymentTx, { status: 'queued', message: `place in line: ${q.length}` });
+  cache.put(params.tx, { status: 'queued', message: `place in line: ${q.length}` });
 }
 
-async function mint({ paymentTx, selfie, name }: IMintParams) {
+async function mint({ tx, selfie, name }: IMintParams) {
   let status = 'ok';
   let message = '';
   try {
-    cache.put(paymentTx, { status: 'processing', message: '' });
-    const decodedTx = await decodeAndValidateTx(paymentTx);
+    logger.info(`[${tx}] 🧮 processing...`);
+    cache.put(tx, { status: 'processing', message: '' });
+
+    logger.info(`[${tx}] 📊 validating tx...`);
+    const decodedTx = await decodeAndValidateTx(tx);
+
+    logger.info(`[${tx}] 🗂 verifying id...`);
     await verifyIdNotUsed(decodedTx.id);
-    await mintNft({ paymentTx, selfie, name }, decodedTx);
+
+    logger.info(`[${tx}] 🚀 minting to ${decodedTx.payer}...`);
+    await mintNft({ tx, selfie, name }, decodedTx);
+
+    logger.info(`[${tx}] 👌 all done!`);
   } catch (e) {
+    logger.error(`[${tx}] ❌ ERROR`);
     logger.error(e);
     status = 'error';
     message = e.message;
   } finally {
-    cache.put(paymentTx, { status, message });
+    cache.put(tx, { status, message });
   }
 }
 
 function validateName(name: string) {
-  if (name.length > 24) {
-    throw new BadRequestError('Name can be at most 32 chars long');
+  if (name.length > MAX_NAME_LENGTH) {
+    throw new BadRequestError(`Name can be at most ${MAX_NAME_LENGTH} chars long`);
   }
 }
 
@@ -73,8 +85,7 @@ function validateFileSize(selfie: UploadedFile) {
 }
 
 async function decodeAndValidateTx(tx: string): Promise<IMintPaymentTx> {
-  const connection = createConnection();
-  const { meta, transaction } = await connection.getTransaction(tx);
+  const { meta, transaction } = await provider.connection.getTransaction(tx);
 
   if (meta.err) {
     throw new BadRequestError('Invalid payment tx: tx failed');
@@ -131,7 +142,9 @@ function extractPayerAndIdFromLogs(logMessages: string[]): IMintPaymentTx {
 async function verifyIdNotUsed(id: number) {
   const { uri } = await getNameAndUri({ index: id - 1, walletKeyPair });
 
-  return !uri.startsWith('http');
+  if (uri.startsWith('http')) {
+    throw new BadRequestError(`ID ${id} has been spent`);
+  }
 }
 
 async function mintNft({ selfie, name }: IMintParams, { id, payer }: IMintPaymentTx) {

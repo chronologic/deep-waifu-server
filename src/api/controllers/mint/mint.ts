@@ -8,7 +8,7 @@ const mint: RequestHandler = async (req, res) => {
   const result = await mintService.pushMintToQueue({
     selfie: req.files.selfie as UploadedFile,
     name: req.body.name,
-    paymentTx: req.body.paymentTx,
+    tx: req.body.tx,
   });
 
   res.setHeader('Content-Type', 'application/json');

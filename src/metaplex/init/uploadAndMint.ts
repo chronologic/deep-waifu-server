@@ -1,7 +1,13 @@
 import fs from 'fs';
 import { Keypair } from '@solana/web3.js';
 
-import { CREATOR_ADDRESS, METAPLEX_CONFIG_ADDRESS, METAPLEX_CONFIG_UUID, SOLANA_ENV, WALLET_PK } from '../env';
+import {
+  CREATOR_ADDRESS,
+  CANDY_MACHINE_CONFIG_ADDRESS,
+  CANDY_MACHINE_CONFIG_UUID,
+  SOLANA_ENV,
+  WALLET_PK,
+} from '../env';
 import { uploadImageAndAddConfigLine, mintOneToken } from '../methods';
 import { IManifest } from '../types';
 
@@ -34,7 +40,7 @@ async function main() {
     manifest,
     image,
     index: 1,
-    configAddress: METAPLEX_CONFIG_ADDRESS,
+    configAddress: CANDY_MACHINE_CONFIG_ADDRESS,
   });
 
   console.log(res);
@@ -42,8 +48,8 @@ async function main() {
   const mintRes = await mintOneToken({
     walletKeyPair,
     env: SOLANA_ENV,
-    configAddress: METAPLEX_CONFIG_ADDRESS,
-    configUuid: METAPLEX_CONFIG_UUID,
+    configAddress: CANDY_MACHINE_CONFIG_ADDRESS,
+    configUuid: CANDY_MACHINE_CONFIG_UUID,
     // mintToAddress: 'H4KjYiFDqUc45on7cFLofPG8uNDShNX5rhLxTpeb69cm',
     mintToAddress: 'H4KjYiFDqUc45on7cFLofPG8uNDShNX5rhLxTpeb69cm',
   });

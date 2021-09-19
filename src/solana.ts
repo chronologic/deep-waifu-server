@@ -4,14 +4,19 @@ import * as anchor from '@project-serum/anchor';
 import { PAYMENT_PROGRAM_ID, SOLANA_ENV, WALLET_PK } from './env';
 import paymentIdl from './idl/deep_waifu_payment_contract.json';
 
-export function createConnection() {
-  return new web3.Connection(web3.clusterApiUrl(SOLANA_ENV), 'confirmed');
-}
+export const connection = new web3.Connection(web3.clusterApiUrl(SOLANA_ENV), 'confirmed');
 
 export const paymentPubkey = new web3.PublicKey(PAYMENT_PROGRAM_ID);
 
-// TODO: get provider
-export const paymentProgram = new anchor.Program(paymentIdl as any, paymentPubkey);
+export const walletKeyPair = web3.Keypair.fromSecretKey(new Uint8Array(JSON.parse(WALLET_PK)));
+
+export const wallet = new anchor.Wallet(walletKeyPair);
+
+export const provider = new anchor.Provider(connection, wallet, {
+  preflightCommitment: 'confirmed',
+});
+
+export const paymentProgram = new anchor.Program(paymentIdl as any, paymentPubkey, provider);
 
 export async function getPaymentProgramPdaAddress() {
   return web3.PublicKey.findProgramAddress(
@@ -19,5 +24,3 @@ export async function getPaymentProgramPdaAddress() {
     paymentPubkey
   );
 }
-
-export const walletKeyPair = web3.Keypair.fromSecretKey(new Uint8Array(JSON.parse(WALLET_PK)));
