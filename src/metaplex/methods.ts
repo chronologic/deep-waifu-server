@@ -521,7 +521,7 @@ export async function mintOneToken({
       createAssociatedTokenAccountInstruction(
         userTokenAccountAddress, // assoc addr
         walletKeyPair.publicKey, // payer
-        mintToPubKey, // walletAddress - maybe target?
+        mintToPubKey, // walletAddress (target)
         mint.publicKey
       ),
       Token.createMintToInstruction(
