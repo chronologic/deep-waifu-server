@@ -81,7 +81,7 @@ export async function uploadAndMint({
   env?: string;
   configAddress?: string;
   configUuid?: string;
-}) {
+}): Promise<{ tx: string }> {
   const res = await uploadImageAndAddConfigLine({
     env,
     walletKeyPair,
@@ -98,6 +98,8 @@ export async function uploadAndMint({
     configUuid,
     mintToAddress,
   });
+
+  return mintRes;
 }
 
 // TODO: handle failures and retry
@@ -472,7 +474,11 @@ export async function mintOneToken({
   configUuid: string;
   configAddress: string;
   mintToAddress: string;
-}): Promise<string> {
+}): Promise<{
+  tx: string;
+  metadataAddress: string;
+  masterEditionAddress: string;
+}> {
   const mint = Keypair.generate();
 
   const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
@@ -535,5 +541,9 @@ export async function mintOneToken({
     ],
   });
 
-  return tx;
+  return {
+    tx,
+    metadataAddress: metadataAddress.toBase58(),
+    masterEditionAddress: masterEdition.toBase58(),
+  };
 }

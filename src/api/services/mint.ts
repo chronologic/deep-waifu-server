@@ -23,6 +23,8 @@ interface IMintPaymentTx {
 interface IMintResult {
   status: string;
   message: string;
+  id?: number;
+  tx?: string;
 }
 
 const cache = createTimedCache<string, IMintResult>(60 * MINUTE_MILLIS);
@@ -41,16 +43,14 @@ export async function pushMintToQueue(params: IMintParams): Promise<void> {
   validateFileSize(params.selfie);
 
   logger.info(`[${params.tx}] 🗄 adding to queue...`);
-  q.push(async () => mint(params));
   cache.put(params.tx, { status: 'queued', message: `place in line: ${q.length}` });
+  q.push(async () => mint(params));
 }
 
 async function mint({ tx, selfie, name }: IMintParams) {
-  let status = 'ok';
-  let message = '';
   try {
     logger.info(`[${tx}] 🧮 processing...`);
-    cache.put(tx, { status: 'processing', message: '' });
+    cache.put(tx, { status: 'processing', message: 'Processing...' });
 
     logger.info(`[${tx}] 📊 validating tx...`);
     const decodedTx = await decodeAndValidateTx(tx);
@@ -59,16 +59,14 @@ async function mint({ tx, selfie, name }: IMintParams) {
     await verifyIdNotUsed(decodedTx.id);
 
     logger.info(`[${tx}] 🚀 minting to ${decodedTx.payer}...`);
-    await mintNft({ tx, selfie, name }, decodedTx);
+    const mintedRes = await mintNft({ tx, selfie, name }, decodedTx);
+    cache.put(tx, { status: 'minted', message: 'Success!', id: decodedTx.id, tx: mintedRes.tx });
 
     logger.info(`[${tx}] 👌 all done!`);
   } catch (e) {
     logger.error(`[${tx}] ❌ ERROR`);
     logger.error(e);
-    status = 'error';
-    message = e.message;
-  } finally {
-    cache.put(tx, { status, message });
+    cache.put(tx, { status: 'error', message: e.message });
   }
 }
 
@@ -147,19 +145,21 @@ async function verifyIdNotUsed(id: number) {
   }
 }
 
-async function mintNft({ selfie, name }: IMintParams, { id, payer }: IMintPaymentTx) {
+async function mintNft({ selfie, name }: IMintParams, { id, payer }: IMintPaymentTx): Promise<{ tx: string }> {
   const manifest = createMetaplexManifest({
     name,
     id,
     creatorAddress: CREATOR_ADDRESS,
   });
-  await uploadAndMint({
+  const res = await uploadAndMint({
     image: selfie.data,
     index: id - 1,
     manifest,
     mintToAddress: payer,
     walletKeyPair,
   });
+
+  return res;
 }
 
 export function getStatus(paymentTx: string) {
