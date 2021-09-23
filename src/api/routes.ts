@@ -2,7 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
 import { SECOND_MILLIS } from '../constants';
-import { imageController, mintController } from './controllers';
+import { imageController, mintController, stripeController } from './controllers';
 
 const router = Router();
 
@@ -21,5 +21,9 @@ router.post('/selfie2anime', selfieLimiter, imageController.convert);
 router.post('/mint', mintLimiter, mintController.mint);
 
 router.get('/mint/:paymentTx', mintController.status);
+
+router.post('/checkoutIntent', stripeController.createCheckoutIntent);
+router.get('/checkoutSession/:id', stripeController.getCheckoutSession);
+router.get('/checkoutSuccess/:sessionId', stripeController.handleCheckoutSuccess);
 
 export default router;
