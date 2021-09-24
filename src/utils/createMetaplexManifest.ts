@@ -19,9 +19,13 @@ export function createMetaplexManifest({
       name: 'Deep Waifu Edition 1',
     },
     image: 'image.png',
+    certificate: 'certificate.png',
     properties: {
       creators: [{ address: creatorAddress, share: 100, verified: true }],
-      files: [{ uri: 'image.png', type: 'image/png' }],
+      files: [
+        { uri: 'image.png', type: 'image/png' },
+        { uri: 'certificate.png', type: 'image/png', name: 'certificate' },
+      ],
     },
   };
 }

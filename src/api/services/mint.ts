@@ -12,6 +12,7 @@ import { provider, getPaymentProgramPdaAddress, paymentProgram, walletKeyPair } 
 interface IMintParams {
   tx: string;
   selfie: UploadedFile;
+  certificate: UploadedFile;
   name: string;
 }
 
@@ -25,6 +26,8 @@ interface IMintResult {
   message: string;
   id?: number;
   tx?: string;
+  metadataLink?: string;
+  certificateLink?: string;
 }
 
 const cache = createTimedCache<string, IMintResult>(60 * MINUTE_MILLIS);
@@ -41,13 +44,14 @@ const q = queue({
 export async function pushMintToQueue(params: IMintParams): Promise<void> {
   validateName(params.name);
   validateFileSize(params.selfie);
+  validateFileSize(params.certificate);
 
   logger.info(`[${params.tx}] 🗄 adding to queue...`);
   cache.put(params.tx, { status: 'queued', message: `place in line: ${q.length}` });
   q.push(async () => mint(params));
 }
 
-async function mint({ tx, selfie, name }: IMintParams) {
+async function mint({ tx, selfie, certificate, name }: IMintParams) {
   try {
     logger.info(`[${tx}] 🧮 processing...`);
     cache.put(tx, { status: 'processing', message: 'Processing...' });
@@ -59,8 +63,15 @@ async function mint({ tx, selfie, name }: IMintParams) {
     await verifyIdNotUsed(decodedTx.id);
 
     logger.info(`[${tx}] 🚀 minting to ${decodedTx.payer}...`);
-    const mintedRes = await mintNft({ tx, selfie, name }, decodedTx);
-    cache.put(tx, { status: 'minted', message: 'Success!', id: decodedTx.id, tx: mintedRes.tx });
+    const mintedRes = await mintNft({ tx, selfie, certificate, name }, decodedTx);
+    cache.put(tx, {
+      status: 'minted',
+      message: 'Success!',
+      id: decodedTx.id,
+      tx: mintedRes.tx,
+      metadataLink: mintedRes.metadataLink,
+      certificateLink: mintedRes.certificateLink,
+    });
 
     logger.info(`[${tx}] 👌 all done!`);
   } catch (e) {
@@ -145,7 +156,10 @@ async function verifyIdNotUsed(id: number) {
   }
 }
 
-async function mintNft({ selfie, name }: IMintParams, { id, payer }: IMintPaymentTx): Promise<{ tx: string }> {
+async function mintNft(
+  { selfie, certificate, name }: IMintParams,
+  { id, payer }: IMintPaymentTx
+): Promise<{ tx: string; metadataLink: string; certificateLink: string }> {
   const manifest = createMetaplexManifest({
     name,
     id,
@@ -153,6 +167,7 @@ async function mintNft({ selfie, name }: IMintParams, { id, payer }: IMintPaymen
   });
   const res = await uploadAndMint({
     image: selfie.data,
+    certificate: certificate.data,
     index: id - 1,
     manifest,
     mintToAddress: payer,

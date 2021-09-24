@@ -9,6 +9,7 @@
   "scripts": {
     "metaplexBootstrap": "ts-node src/metaplexBootstrap.ts",
     "metaplexVerify": "ts-node src/metaplexVerify.ts",
+    "upload": "ts-node src/metaplex/init/uploadWithCert.ts",
     "eslint": "eslint src/index.ts",
     "build": "tsc",
     "lint": "./node_modules/eslint/bin/eslint.js  src --ext .ts",

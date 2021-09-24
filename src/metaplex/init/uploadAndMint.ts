@@ -8,7 +8,7 @@ import {
   SOLANA_ENV,
   WALLET_PK,
 } from '../env';
-import { uploadImageAndAddConfigLine, mintOneToken } from '../methods';
+import { uploadImagesAndAddConfigLine, mintOneToken } from '../methods';
 import { IManifest } from '../types';
 
 const walletKeyPair = Keypair.fromSecretKey(new Uint8Array(JSON.parse(WALLET_PK)));
@@ -30,15 +30,17 @@ const manifest: IManifest = {
 };
 
 const image = fs.readFileSync('./images/crazy.png');
+const certificate = fs.readFileSync('./images/cert.png');
 
 // console.log(image);
 
 async function main() {
-  const res = await uploadImageAndAddConfigLine({
+  const res = await uploadImagesAndAddConfigLine({
     env: SOLANA_ENV,
     walletKeyPair,
     manifest,
     image,
+    certificate,
     index: 1,
     configAddress: CANDY_MACHINE_CONFIG_ADDRESS,
   });
@@ -50,7 +52,6 @@ async function main() {
     env: SOLANA_ENV,
     configAddress: CANDY_MACHINE_CONFIG_ADDRESS,
     configUuid: CANDY_MACHINE_CONFIG_UUID,
-    // mintToAddress: 'H4KjYiFDqUc45on7cFLofPG8uNDShNX5rhLxTpeb69cm',
     mintToAddress: 'H4KjYiFDqUc45on7cFLofPG8uNDShNX5rhLxTpeb69cm',
   });
 

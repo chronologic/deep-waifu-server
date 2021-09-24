@@ -3,7 +3,7 @@ import { Keypair } from '@solana/web3.js';
 import initConfig from './initConfig';
 import createCandyMachine from './createCandyMachine';
 import setStartDate from './setStartDate';
-import { mintOneToken, uploadImageAndAddConfigLine } from '../methods';
+import { mintOneToken, uploadImagesAndAddConfigLine } from '../methods';
 import { SOLANA_ENV } from '../env';
 import { IManifest } from '../types';
 
@@ -32,15 +32,15 @@ export async function bootstrap({
   console.log('intializing config...');
   const initConfigRes = await initConfig({ items, manifest, walletKeyPair, env });
 
-  console.log('uploading and adding config line for first image...');
-  const uploadRes = await uploadImageAndAddConfigLine({
-    walletKeyPair,
-    configAddress: initConfigRes.configAddress,
-    env,
-    image,
-    index: 0,
-    manifest,
-  });
+  // console.log('uploading and adding config line for first image...');
+  // const uploadRes = await uploadImagesAndAddConfigLine({
+  //   walletKeyPair,
+  //   configAddress: initConfigRes.configAddress,
+  //   env,
+  //   image,
+  //   index: 0,
+  //   manifest,
+  // });
 
   console.log('creating candy machine...');
   const createCandyMachineRes = await createCandyMachine({
@@ -66,7 +66,8 @@ export async function bootstrap({
   return {
     configUuid: initConfigRes.configUuid,
     configAddress: initConfigRes.configAddress,
-    imageUri: uploadRes.link,
+    // metadataLink: uploadRes.metadataLink,
+    // certificateLink: uploadRes.certificateLink,
     candyMachineId: createCandyMachineRes.candyMachineId,
     candyMachineConfig: createCandyMachineRes.candyMachineConfig,
     mintTx: tx,

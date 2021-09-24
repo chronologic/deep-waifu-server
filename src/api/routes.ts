@@ -2,7 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
 import { SECOND_MILLIS } from '../constants';
-import { imageController, mintController, stripeController } from './controllers';
+import { certificateController, imageController, mintController, stripeController } from './controllers';
 
 const router = Router();
 
@@ -25,5 +25,7 @@ router.get('/mint/:paymentTx', mintController.status);
 router.post('/checkoutIntent', stripeController.createCheckoutIntent);
 router.get('/checkoutSession/:id', stripeController.getCheckoutSession);
 router.get('/checkoutSuccess/:sessionId', stripeController.handleCheckoutSuccess);
+
+router.get('/c/:certificateId', certificateController.view);
 
 export default router;

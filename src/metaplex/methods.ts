@@ -67,6 +67,7 @@ export async function uploadAndMint({
   walletKeyPair,
   manifest,
   image,
+  certificate,
   index,
   mintToAddress,
   env = SOLANA_ENV,
@@ -76,17 +77,19 @@ export async function uploadAndMint({
   walletKeyPair: anchor.web3.Keypair;
   manifest: IManifest;
   image: Buffer;
+  certificate: Buffer;
   index: number;
   mintToAddress: string;
   env?: string;
   configAddress?: string;
   configUuid?: string;
-}): Promise<{ tx: string }> {
-  const res = await uploadImageAndAddConfigLine({
+}): Promise<{ tx: string; metadataLink: string; certificateLink: string }> {
+  const res = await uploadImagesAndAddConfigLine({
     env,
     walletKeyPair,
     manifest,
     image,
+    certificate,
     index,
     configAddress,
   });
@@ -99,15 +102,20 @@ export async function uploadAndMint({
     mintToAddress,
   });
 
-  return mintRes;
+  return {
+    tx: mintRes.tx,
+    metadataLink: res.metadataLink,
+    certificateLink: res.certificateLink,
+  };
 }
 
 // TODO: handle failures and retry
-export async function uploadImageAndAddConfigLine({
+export async function uploadImagesAndAddConfigLine({
   walletKeyPair,
   env,
   manifest,
   image,
+  certificate,
   index,
   configAddress,
 }: {
@@ -115,26 +123,29 @@ export async function uploadImageAndAddConfigLine({
   env: string;
   manifest: IManifest;
   image: Buffer;
+  certificate?: Buffer;
   index: number;
   configAddress: string;
 }): Promise<{
-  link: string;
+  metadataLink: string;
+  certificateLink: string;
   uploaded: boolean;
   onChain: boolean;
 }> {
   // const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
   // const config = new anchor.web3.PublicKey(configAddress);
 
-  const res = await uploadImageAndManifest({
+  const res = await uploadImagesAndManifest({
     walletKeyPair,
     env,
     image,
+    certificate,
     index,
     manifest,
   });
 
   const uploaded = res.success;
-  const { link } = res;
+  const { metadataLink, certificateLink } = res;
   let onChain = false;
 
   try {
@@ -143,7 +154,7 @@ export async function uploadImageAndAddConfigLine({
       env,
       index,
       walletKeyPair,
-      link,
+      link: metadataLink,
       name: manifest.name,
     });
     onChain = true;
@@ -152,7 +163,8 @@ export async function uploadImageAndAddConfigLine({
   }
 
   return {
-    link,
+    metadataLink,
+    certificateLink,
     uploaded,
     onChain,
   };
@@ -233,17 +245,103 @@ export async function initConfigLines({
   }
 }
 
-export async function uploadImageAndManifest({
+export async function uploadImagesAndManifest({
   walletKeyPair,
   env,
   manifest,
   image,
+  certificate,
   index,
 }: {
   walletKeyPair: anchor.web3.Keypair;
   env: string;
   manifest: IManifest;
   image: Buffer;
+  certificate?: Buffer;
+  index: number;
+}): Promise<{
+  metadataLink: string;
+  certificateLink: string;
+  success: boolean;
+}> {
+  const storageCost = 10;
+  const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
+  const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+
+  const instructions = [
+    anchor.web3.SystemProgram.transfer({
+      fromPubkey: walletKeyPair.publicKey,
+      toPubkey: PAYMENT_WALLET,
+      lamports: storageCost,
+    }),
+  ];
+
+  const tx = await sendTransactionWithRetryWithKeypair(
+    anchorProgram.provider.connection,
+    walletKeyPair,
+    instructions,
+    [],
+    'single'
+  );
+  console.info('transaction for arweave payment:', tx);
+
+  // data.append('tags', JSON.stringify(tags));
+  // payment transaction
+  const data = new FormData();
+  data.append('transaction', tx['txid']);
+  data.append('env', env);
+  data.append('file[]', image, {
+    filename: 'image.png',
+    contentType: 'image/png',
+  });
+  if (certificate) {
+    data.append('file[]', certificate, {
+      filename: 'certificate.png',
+      contentType: 'image/png',
+    });
+  }
+  data.append('file[]', manifestBuffer, 'metadata.json');
+
+  let metadataLink = '';
+  let certificateLink = '';
+  let success = false;
+  try {
+    const result = await upload(data, manifest, index);
+
+    const metadataFile = result.messages?.find((m: any) => m.filename === 'manifest.json');
+    if (metadataFile?.transactionId) {
+      metadataLink = `https://arweave.net/${metadataFile.transactionId}`;
+      console.log(`File uploaded: ${metadataLink}`);
+    }
+    const certificateFile = result.messages?.find((m: any) => m.filename === 'certificate.png');
+    if (certificateFile?.transactionId) {
+      certificateLink = `https://arweave.net/${certificateFile.transactionId}`;
+    }
+    success = true;
+  } catch (er) {
+    console.error(`Error uploading file ${index}`, er);
+  }
+
+  return {
+    metadataLink,
+    certificateLink,
+    success,
+  };
+}
+
+export async function uploadWithCert({
+  walletKeyPair,
+  env,
+  manifest,
+  image,
+  cert,
+  index,
+}: {
+  walletKeyPair: anchor.web3.Keypair;
+  env: string;
+  manifest: IManifest;
+  image: Buffer;
+  cert: Buffer;
   index: number;
 }): Promise<{
   link: string;
@@ -279,12 +377,18 @@ export async function uploadImageAndManifest({
     filename: 'image.png',
     contentType: 'image/png',
   });
+  data.append('file[]', cert, {
+    filename: 'cert.png',
+    contentType: 'image/png',
+  });
   data.append('file[]', manifestBuffer, 'metadata.json');
 
   let link = '';
   let success = false;
   try {
     const result = await upload(data, manifest, index);
+
+    console.log(result);
 
     const metadataFile = result.messages?.find((m: any) => m.filename === 'manifest.json');
     if (metadataFile?.transactionId) {
@@ -300,6 +404,51 @@ export async function uploadImageAndManifest({
     link,
     success,
   };
+}
+
+export async function uploadImage({
+  walletKeyPair,
+  env,
+  image,
+}: {
+  walletKeyPair: anchor.web3.Keypair;
+  env: string;
+  image: Buffer;
+}): Promise<any> {
+  const storageCost = 10;
+  const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
+
+  const instructions = [
+    anchor.web3.SystemProgram.transfer({
+      fromPubkey: walletKeyPair.publicKey,
+      toPubkey: PAYMENT_WALLET,
+      lamports: storageCost,
+    }),
+  ];
+
+  const tx = await sendTransactionWithRetryWithKeypair(
+    anchorProgram.provider.connection,
+    walletKeyPair,
+    instructions,
+    [],
+    'single'
+  );
+  console.info('transaction for arweave payment:', tx);
+
+  // data.append('tags', JSON.stringify(tags));
+  // payment transaction
+  const data = new FormData();
+  data.append('transaction', tx['txid']);
+  data.append('env', env);
+  data.append('file[]', image, {
+    filename: 'image.png',
+    contentType: 'image/png',
+  });
+  const result = await upload(data, {} as any, 0);
+
+  console.log(result);
+
+  return result;
 }
 
 export async function verify({

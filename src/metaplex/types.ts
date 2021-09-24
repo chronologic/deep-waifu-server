@@ -28,6 +28,7 @@ export interface IManifest {
   symbol: string;
   description?: string;
   image?: string;
+  certificate?: string;
   seller_fee_basis_points: number;
 
   collection?: {
@@ -40,6 +41,7 @@ export interface IManifest {
     files?: {
       uri: string;
       type: string;
+      name?: string;
     }[];
   };
 }
