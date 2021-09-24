@@ -5,9 +5,9 @@ import { requestMiddleware } from '../../middleware';
 import { stripeService } from '../../services';
 
 const handleCheckoutSuccess: RequestHandler = async (req, res) => {
-  await stripeService.handleCheckoutSuccess(req.params.sessionId);
+  const { paymentId, orderId } = await stripeService.handleCheckoutSuccess(req.params.sessionId);
 
-  res.redirect(302, `${UI_URL}/orderSuccess`);
+  res.redirect(302, `${UI_URL}/orderSuccess?paymentId=${paymentId}&orderId=${orderId}`);
 };
 
 export default requestMiddleware(handleCheckoutSuccess);

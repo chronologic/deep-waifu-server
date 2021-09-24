@@ -2,14 +2,13 @@ import { UploadedFile } from 'express-fileupload';
 import Stripe from 'stripe';
 
 import { HOUR_MILLIS } from '../../constants';
-import { PILLOW_PRICE_USD, SELF_URL, STRIPE_PUBLIC_KEY, STRIPE_SECRET_KEY, UI_URL } from '../../env';
+import { PILLOW_PRICE_USD, SELF_URL, STRIPE_SECRET_KEY, UI_URL } from '../../env';
 import { createTimedCache } from '../../utils';
 import { BadRequestError } from '../errors';
 import { upload } from './imgbb';
 import { orderPillow } from './printful';
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  // apiVersion: '2019-09-09' as any,
   apiVersion: '2020-08-27',
 });
 
@@ -101,7 +100,7 @@ export async function getCheckoutSession(id: string) {
   return session;
 }
 
-export async function handleCheckoutSuccess(sessionId: string) {
+export async function handleCheckoutSuccess(sessionId: string): Promise<{ paymentId: string; orderId: number }> {
   if (processedOrdersCache.get(sessionId)) {
     throw new BadRequestError(`Order ${sessionId} already processed`);
   }
@@ -115,7 +114,7 @@ export async function handleCheckoutSuccess(sessionId: string) {
 
   const { shipping } = session;
 
-  await orderPillow({
+  const { orderId } = await orderPillow({
     name: shipping.name,
     address1: shipping.address.line1,
     address2: shipping.address.line2,
@@ -126,5 +125,5 @@ export async function handleCheckoutSuccess(sessionId: string) {
     imageUrl: session.metadata.imageUrl,
   });
 
-  return session;
+  return { paymentId: session.id, orderId };
 }
