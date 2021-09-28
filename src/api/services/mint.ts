@@ -1,4 +1,5 @@
 import { UploadedFile } from 'express-fileupload';
+import * as anchor from '@project-serum/anchor';
 import queue from 'queue';
 
 import { MINUTE_MILLIS } from '../../constants';
@@ -11,7 +12,8 @@ import { provider, getPaymentProgramPdaAddress, paymentProgram, walletKeyPair } 
 
 interface IMintParams {
   tx: string;
-  selfie: UploadedFile;
+  dayPayment: boolean;
+  waifu: UploadedFile;
   certificate: UploadedFile;
   name: string;
 }
@@ -43,7 +45,7 @@ const q = queue({
 
 export async function pushMintToQueue(params: IMintParams): Promise<void> {
   validateName(params.name);
-  validateFileSize(params.selfie);
+  validateFileSize(params.waifu);
   validateFileSize(params.certificate);
 
   logger.info(`[${params.tx}] 🗄 adding to queue...`);
@@ -51,19 +53,19 @@ export async function pushMintToQueue(params: IMintParams): Promise<void> {
   q.push(async () => mint(params));
 }
 
-async function mint({ tx, selfie, certificate, name }: IMintParams) {
+async function mint({ tx, dayPayment, waifu, certificate, name }: IMintParams) {
   try {
     logger.info(`[${tx}] 🧮 processing...`);
     cache.put(tx, { status: 'processing', message: 'Processing...' });
 
     logger.info(`[${tx}] 📊 validating tx...`);
-    const decodedTx = await decodeAndValidateTx(tx);
+    const decodedTx = await decodeAndValidateTx(tx, dayPayment);
 
     logger.info(`[${tx}] 🗂 verifying id...`);
     await verifyIdNotUsed(decodedTx.id);
 
     logger.info(`[${tx}] 🚀 minting to ${decodedTx.payer}...`);
-    const mintedRes = await mintNft({ tx, selfie, certificate, name }, decodedTx);
+    const mintedRes = await mintNft({ tx, dayPayment, waifu, certificate, name }, decodedTx);
     cache.put(tx, {
       status: 'minted',
       message: 'Success!',
@@ -93,7 +95,7 @@ function validateFileSize(selfie: UploadedFile) {
   }
 }
 
-async function decodeAndValidateTx(tx: string): Promise<IMintPaymentTx> {
+async function decodeAndValidateTx(tx: string, dayPayment: boolean): Promise<IMintPaymentTx> {
   const { meta, transaction } = await provider.connection.getTransaction(tx);
 
   if (meta.err) {
@@ -106,11 +108,7 @@ async function decodeAndValidateTx(tx: string): Promise<IMintPaymentTx> {
     throw new BadRequestError('Invalid payment tx: payment program missing');
   }
 
-  const logs = extractLogs(meta.logMessages);
-
-  if (logs.length < 1) {
-    throw new BadRequestError('Invalid payment tx: payment logs missing');
-  }
+  const logs = extractProgramLogs(meta.logMessages);
 
   const { payer, id } = extractPayerAndIdFromLogs(logs);
 
@@ -120,20 +118,39 @@ async function decodeAndValidateTx(tx: string): Promise<IMintPaymentTx> {
 
   const [pdaPubkey] = await getPaymentProgramPdaAddress();
 
-  const { priceLamports, beneficiary } = (await paymentProgram.account.paymentStorage.fetch(pdaPubkey)) as any;
+  const { priceLamports, priceDay, beneficiary, beneficiaryDay } = (await paymentProgram.account.paymentStorage.fetch(
+    pdaPubkey
+  )) as any;
 
-  const beneficiaryIndex = accountKeys.findIndex((k) => k === beneficiary.toBase58());
+  if (dayPayment) {
+    const beneficiaryIndex = accountKeys.findIndex((k) => k === beneficiaryDay.toBase58());
 
-  const beneficiaryBalanceDiff = meta.postBalances[beneficiaryIndex] - meta.preBalances[beneficiaryIndex];
+    const preTokenBalance = new anchor.BN(
+      meta.preTokenBalances.find((b) => b.accountIndex === beneficiaryIndex).uiTokenAmount.amount
+    );
+    const postTokenBalance = new anchor.BN(
+      meta.postTokenBalances.find((b) => b.accountIndex === beneficiaryIndex).uiTokenAmount.amount
+    );
+    const balanceDiff = postTokenBalance.sub(preTokenBalance);
 
-  if (beneficiaryBalanceDiff !== priceLamports.toNumber()) {
-    throw new BadRequestError('Invalid payment tx: invalid payment amount');
+    if (balanceDiff.toNumber() !== priceDay.toNumber()) {
+      throw new BadRequestError('Invalid payment tx: invalid DAY payment amount');
+    }
+  } else {
+    const beneficiaryIndex = accountKeys.findIndex((k) => k === beneficiary.toBase58());
+
+    const beneficiaryBalanceDiff = meta.postBalances[beneficiaryIndex] - meta.preBalances[beneficiaryIndex];
+
+    // allow some difference for tx fee
+    if (beneficiaryBalanceDiff !== priceLamports.toNumber() * 0.95) {
+      throw new BadRequestError('Invalid payment tx: invalid payment amount');
+    }
   }
 
   return { payer, id };
 }
 
-function extractLogs(logMessages: string[]): string[] {
+function extractProgramLogs(logMessages: string[]): string[] {
   const startIndex = logMessages.findIndex((msg) => msg.startsWith(`Program ${PAYMENT_PROGRAM_ID} invoke`));
   const endIndex = logMessages.findIndex((msg) => msg === `Program ${PAYMENT_PROGRAM_ID} success`);
 
@@ -157,7 +174,7 @@ async function verifyIdNotUsed(id: number) {
 }
 
 async function mintNft(
-  { selfie, certificate, name }: IMintParams,
+  { waifu, certificate, name }: IMintParams,
   { id, payer }: IMintPaymentTx
 ): Promise<{ tx: string; metadataLink: string; certificateLink: string }> {
   const manifest = createMetaplexManifest({
@@ -166,7 +183,7 @@ async function mintNft(
     creatorAddress: CREATOR_ADDRESS,
   });
   const res = await uploadAndMint({
-    image: selfie.data,
+    image: waifu.data,
     certificate: certificate.data,
     index: id - 1,
     manifest,

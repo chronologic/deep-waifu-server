@@ -6,10 +6,11 @@ import { mintService } from '../../services';
 
 const mint: RequestHandler = async (req, res) => {
   const result = await mintService.pushMintToQueue({
-    selfie: req.files.selfie as UploadedFile,
+    waifu: req.files.waifu as UploadedFile,
     certificate: req.files.certificate as UploadedFile,
     name: req.body.name,
     tx: req.body.tx,
+    dayPayment: req.body.dayPayment,
   });
 
   res.setHeader('Content-Type', 'application/json');
