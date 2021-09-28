@@ -1,4 +1,8 @@
 import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
+import * as anchor from '@project-serum/anchor';
+import fs from 'fs';
+import BN from 'bn.js';
+
 import {
   CANDY_MACHINE,
   CANDY_MACHINE_PROGRAM_ID,
@@ -6,9 +10,6 @@ import {
   TOKEN_METADATA_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from './constants';
-import * as anchor from '@project-serum/anchor';
-import fs from 'fs';
-import BN from 'bn.js';
 import { createConfigAccount } from './instructions';
 
 export const createConfig = async function (

@@ -130,11 +130,7 @@ export async function uploadImagesAndAddConfigLine({
   metadataLink: string;
   certificateLink: string;
   uploaded: boolean;
-  onChain: boolean;
 }> {
-  // const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
-  // const config = new anchor.web3.PublicKey(configAddress);
-
   const res = await uploadImagesAndManifest({
     walletKeyPair,
     env,
@@ -146,27 +142,20 @@ export async function uploadImagesAndAddConfigLine({
 
   const uploaded = res.success;
   const { metadataLink, certificateLink } = res;
-  let onChain = false;
 
-  try {
-    await addConfigLine({
-      configAddress,
-      env,
-      index,
-      walletKeyPair,
-      link: metadataLink,
-      name: manifest.name,
-    });
-    onChain = true;
-  } catch (e) {
-    console.log(`saving config line ${index} failed`, e);
-  }
+  await addConfigLine({
+    configAddress,
+    env,
+    index,
+    walletKeyPair,
+    link: metadataLink,
+    name: manifest.name,
+  });
 
   return {
     metadataLink,
     certificateLink,
     uploaded,
-    onChain,
   };
 }
 
@@ -267,6 +256,13 @@ export async function uploadImagesAndManifest({
   const storageCost = 10;
   const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
   const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+  // const lolManifest = {
+  //   ...manifest,
+  //   properties: { ...manifest.properties, files: manifest.properties.files.slice(0, 1) },
+  // };
+  // const manifestBuffer = Buffer.from(JSON.stringify(lolManifest));
+
+  // console.log(lolManifest);
 
   const instructions = [
     anchor.web3.SystemProgram.transfer({
@@ -285,7 +281,6 @@ export async function uploadImagesAndManifest({
   );
   console.info('transaction for arweave payment:', tx);
 
-  // data.append('tags', JSON.stringify(tags));
   // payment transaction
   const data = new FormData();
   data.append('transaction', tx['txid']);
@@ -459,37 +454,42 @@ export async function verify({
   walletKeyPair: anchor.web3.Keypair;
   env: string;
   configAddress: string;
-}): Promise<{
-  allGood: boolean;
-}> {
+}): Promise<void> {
   const anchorProgram = await loadAnchorProgram(walletKeyPair, env);
 
   const configPubKey = new PublicKey(configAddress);
   const config = await anchorProgram.provider.connection.getAccountInfo(configPubKey);
-  const allGood = true;
-
-  // console.log(fromUTF8Array([...config.data]));
 
   const configData = (await anchorProgram.account.config.fetch(configAddress)) as Config;
+
+  let mintedCount = 0;
+  let availableCount = 0;
 
   for (let i = 0; i < configData.data.maxNumberOfLines; i++) {
     const thisSlice = config.data.slice(
       CONFIG_ARRAY_START + 4 + CONFIG_LINE_SIZE * i,
       CONFIG_ARRAY_START + 4 + CONFIG_LINE_SIZE * (i + 1)
     );
-    const name = fromUTF8Array([...thisSlice.slice(4, 36)]);
-    const uri = fromUTF8Array([...thisSlice.slice(40, 240)]);
+    const name = fromUTF8Array([...thisSlice.slice(4, 36)])
+      // eslint-disable-next-line no-control-regex
+      .replace(/\x00/g, '');
+    const uri = fromUTF8Array([...thisSlice.slice(40, 240)])
+      // eslint-disable-next-line no-control-regex
+      .replace(/\x00/g, '');
 
-    console.log({
-      i,
-      name,
-      uri,
-    });
+    if (!uri.startsWith('http')) {
+      availableCount += 1;
+    } else {
+      mintedCount += 1;
+      console.log({
+        i,
+        uri,
+        name,
+      });
+    }
   }
 
-  return {
-    allGood,
-  };
+  console.log({ mintedCount, availableCount });
 }
 
 export async function getNameAndUri({

@@ -5,6 +5,8 @@ import { walletKeyPair } from './solana';
 
 main();
 
+// //////////////////////////////////////////////////
+
 async function main() {
   await verify({
     walletKeyPair,

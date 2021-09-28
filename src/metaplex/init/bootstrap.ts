@@ -9,13 +9,11 @@ import { IManifest } from '../types';
 
 export async function bootstrap({
   walletKeyPair,
-  image,
   manifest,
   env = SOLANA_ENV,
   items = 10,
 }: {
   walletKeyPair: Keypair;
-  image: Buffer;
   manifest: IManifest;
   env?: string;
   items?: number;
@@ -29,7 +27,7 @@ export async function bootstrap({
   //   walletKeyPair,
   // });
 
-  console.log('intializing config...');
+  console.log('initializing config...');
   const initConfigRes = await initConfig({ items, manifest, walletKeyPair, env });
 
   // console.log('uploading and adding config line for first image...');
@@ -54,14 +52,14 @@ export async function bootstrap({
     configAddress: initConfigRes.configAddress,
   });
 
-  console.log('minting first token...');
-  const tx = await mintOneToken({
-    walletKeyPair,
-    env: SOLANA_ENV,
-    configUuid: initConfigRes.configUuid,
-    configAddress: initConfigRes.configAddress,
-    mintToAddress: walletKeyPair.publicKey.toBase58(),
-  });
+  // console.log('minting first token...');
+  // const tx = await mintOneToken({
+  //   walletKeyPair,
+  //   env: SOLANA_ENV,
+  //   configUuid: initConfigRes.configUuid,
+  //   configAddress: initConfigRes.configAddress,
+  //   mintToAddress: walletKeyPair.publicKey.toBase58(),
+  // });
 
   return {
     configUuid: initConfigRes.configUuid,
@@ -70,6 +68,6 @@ export async function bootstrap({
     // certificateLink: uploadRes.certificateLink,
     candyMachineId: createCandyMachineRes.candyMachineId,
     candyMachineConfig: createCandyMachineRes.candyMachineConfig,
-    mintTx: tx,
+    // mintTx: tx,
   };
 }

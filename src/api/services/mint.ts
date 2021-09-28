@@ -35,7 +35,7 @@ interface IMintResult {
 const cache = createTimedCache<string, IMintResult>(60 * MINUTE_MILLIS);
 const logger = createLogger('mint');
 
-const MAX_FILE_SIZE_KB = 200;
+const MAX_FILE_SIZE_KB = 1024;
 const MAX_NAME_LENGTH = 24;
 
 const q = queue({
@@ -142,7 +142,7 @@ async function decodeAndValidateTx(tx: string, dayPayment: boolean): Promise<IMi
     const beneficiaryBalanceDiff = meta.postBalances[beneficiaryIndex] - meta.preBalances[beneficiaryIndex];
 
     // allow some difference for tx fee
-    if (beneficiaryBalanceDiff !== priceLamports.toNumber() * 0.95) {
+    if (beneficiaryBalanceDiff < priceLamports.toNumber() * 0.95) {
       throw new BadRequestError('Invalid payment tx: invalid payment amount');
     }
   }
