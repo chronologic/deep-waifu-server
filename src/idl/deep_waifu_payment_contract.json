@@ -50,6 +50,12 @@
           }
         },
         {
+          "name": "priceDay",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
           "name": "count",
           "type": {
             "option": "u16"
@@ -63,6 +69,12 @@
         },
         {
           "name": "beneficiary",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "beneficiaryDay",
           "type": {
             "option": "publicKey"
           }
@@ -100,6 +112,37 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "payForMintSpl",
+      "accounts": [
+        {
+          "name": "myPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "from",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "beneficiaryDay",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -113,6 +156,10 @@
             "type": "u64"
           },
           {
+            "name": "priceDay",
+            "type": "u64"
+          },
+          {
             "name": "count",
             "type": "u16"
           },
@@ -122,6 +169,10 @@
           },
           {
             "name": "beneficiary",
+            "type": "publicKey"
+          },
+          {
+            "name": "beneficiaryDay",
             "type": "publicKey"
           },
           {
