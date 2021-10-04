@@ -8,7 +8,7 @@ This repository holds the server code that handles the following responsibilitie
 - mint waifus as NFTs
 - handle pillow purchases
 
-The live version od the dapp can be found [here](https://deepwaifu.chronologic.network/).
+The live version of the dapp can be found [here](https://deepwaifu.chronologic.network/).
 
 ## 🗺 Project overview
 
