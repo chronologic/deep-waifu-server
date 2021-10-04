@@ -34,20 +34,20 @@ Below is a list of possible environment variables.
 | `LOG_LEVEL`                    | `string`   | `info`  | Standard [`npm`](https://github.com/winstonjs/winston#logging-levels) log level                                                                                |
 | `PORT`                         | `number`   | `1337`  | Port at which the server should be listening                                                                                                                   |
 | `SELF_URL`                     | `string`   |         | Public URL to this server. This is used for constructing a redirect after purchasing a pillow.                                                                 |
-| `UI_URL`                       | `string`   |         | URL of (DeepWaifu UI)[https://github.com/chronologic/deep-waifu-ui]                                                                                            |
-| `MODEL_URL`                    | `string`   |         | URL of (DeepWaifu AI Model)[https://github.com/chronologic/deep-waifu-model]                                                                                   |
-| `SOLANA_ENV`                   | `string`   |         | Solana network the server should connect to (`devnet`/`testnet`/...)                                                                                           |
-| `PAYMENT_PROGRAM_ID`           | `string`   |         | Public key of (DeepWaifu Payment Contract)[https://github.com/chronologic/deep-waifu-payment-contract]                                                         |
-| `CANDY_MACHINE_CONFIG_UUID`    | `string`   |         | (Metaplex Candy Machine)[https://hackmd.io/@levicook/HJcDneEWF] config UUID.                                                                                   |
-| `CANDY_MACHINE_CONFIG_ADDRESS` | `string`   |         | (Metaplex Candy Machine)[https://hackmd.io/@levicook/HJcDneEWF] config address.                                                                                |
-| `METAPLEX_CANDY_MACHINE_ID`    | `string`   |         | (Metaplex Candy Machine)[https://hackmd.io/@levicook/HJcDneEWF] ID.                                                                                            |
-| `WALLET_PK`                    | `number[]` |         | Solana wallet private key. This wallet will be used for creating the (Metaplex Candy Machine)[https://hackmd.io/@levicook/HJcDneEWF] and for minting the NFTs. |
+| `UI_URL`                       | `string`   |         | URL of [DeepWaifu UI](https://github.com/chronologic/deep-waifu-ui)                                                                                            |
+| `MODEL_URL`                    | `string`   |         | URL of [DeepWaifu AI Model](https://github.com/chronologic/deep-waifu-model)                                                                                   |
+| `SOLANA_ENV`                   | `string`   |         | Solana network the server should connect to [`devnet`/`testnet`/...)                                                                                           |
+| `PAYMENT_PROGRAM_ID`           | `string`   |         | Public key of [DeepWaifu Payment Contract](https://github.com/chronologic/deep-waifu-payment-contract)                                                         |
+| `CANDY_MACHINE_CONFIG_UUID`    | `string`   |         | [Metaplex Candy Machine](https://hackmd.io/@levicook/HJcDneEWF) config UUID.                                                                                   |
+| `CANDY_MACHINE_CONFIG_ADDRESS` | `string`   |         | [Metaplex Candy Machine](https://hackmd.io/@levicook/HJcDneEWF) config address.                                                                                |
+| `METAPLEX_CANDY_MACHINE_ID`    | `string`   |         | [Metaplex Candy Machine](https://hackmd.io/@levicook/HJcDneEWF) ID.                                                                                            |
+| `WALLET_PK`                    | `number[]` |         | Solana wallet private key. This wallet will be used for creating the [Metaplex Candy Machine](https://hackmd.io/@levicook/HJcDneEWF) and for minting the NFTs. |
 | `CREATOR_ADDRESS`              | `string`   |         | Public key of wallet that will be entitled to royalties from trading the minted NFTs.                                                                          |
-| `STRIPE_PUBLIC_KEY`            | `string`   |         | Public API key for (Stripe)[https://stripe.com/docs/api/authentication] payment service. This is used in the pillow purchase flow.                             |
-| `STRIPE_SECRET_KEY`            | `string`   |         | Secret API key for (Stripe)[https://stripe.com/docs/api/authentication] payment service. This is used in the pillow purchase flow.                             |
+| `STRIPE_PUBLIC_KEY`            | `string`   |         | Public API key for [Stripe](https://stripe.com/docs/api/authentication) payment service. This is used in the pillow purchase flow.                             |
+| `STRIPE_SECRET_KEY`            | `string`   |         | Secret API key for [Stripe](https://stripe.com/docs/api/authentication) payment service. This is used in the pillow purchase flow.                             |
 | `PILLOW_PRICE_USD`             | `number`   |         | The price of the pillow in USD.                                                                                                                                |
-| `IMGBB_KEY`                    | `string`   |         | API key for (imgbb)[https://api.imgbb.com/] image storage service. This is used for temporary storage of images in the pillow purchase flow.                   |
-| `PRINTFUL_KEY`                 | `string`   |         | API key for (Printful)[https://www.printful.com/api] on-demand printing service. This is used for the pillow purchase flow.                                    |
+| `IMGBB_KEY`                    | `string`   |         | API key for [imgbb](https://api.imgbb.com/) image storage service. This is used for temporary storage of images in the pillow purchase flow.                   |
+| `PRINTFUL_KEY`                 | `string`   |         | API key for [Printful](https://www.printful.com/api) on-demand printing service. This is used for the pillow purchase flow.                                    |
 
 ## 💽 Installation
 
@@ -55,7 +55,7 @@ Run `npm install`
 
 ## 🍬 Metaplex Candy Machine Setup
 
-To create and initialize the (Metaplex Candy Machine)[https://hackmd.io/@levicook/HJcDneEWF] Run
+To create and initialize the [Metaplex Candy Machine](https://hackmd.io/@levicook/HJcDneEWF) run
 
 `npm run metaplexBootstrap`
 
