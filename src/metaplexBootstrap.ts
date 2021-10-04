@@ -35,7 +35,13 @@ async function main() {
   console.log(`final deployer balance is ${balanceAfter / LAMPORTS_PER_SOL} SOL`);
   console.log(`consumed ${(balanceBefore - balanceAfter) / LAMPORTS_PER_SOL} SOL`);
 
-  console.log(res);
+  const cfg = {
+    CANDY_MACHINE_CONFIG_UUID: res.configUuid,
+    CANDY_MACHINE_CONFIG_ADDRESS: res.configAddress,
+    METAPLEX_CANDY_MACHINE_ID: res.candyMachineId,
+  };
 
-  fs.writeFileSync(`./${res.candyMachineId}.json`, JSON.stringify(res, null, 2));
+  console.log(cfg);
+
+  fs.writeFileSync(`./candyMachine_${res.candyMachineId}.json`, JSON.stringify(cfg, null, 2));
 }
