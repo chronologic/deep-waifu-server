@@ -12,6 +12,8 @@ export const walletKeyPair = web3.Keypair.fromSecretKey(new Uint8Array(JSON.pars
 
 export const wallet = new anchor.Wallet(walletKeyPair);
 
+console.log(`Using wallet ${wallet.publicKey.toBase58()}`);
+
 export const provider = new anchor.Provider(connection, wallet, {
   preflightCommitment: 'confirmed',
 });
