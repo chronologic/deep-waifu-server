@@ -56,10 +56,12 @@ async function main() {
   const cfg = {
     CANDY_MACHINE_CONFIG_UUID: res.configUuid,
     CANDY_MACHINE_CONFIG_ADDRESS: res.configAddress,
-    METAPLEX_CANDY_MACHINE_ID: res.candyMachineId,
+    CANDY_MACHINE_CONFIG_ID: res.candyMachineId,
   };
 
-  console.log(cfg);
+  console.log(`CANDY_MACHINE_CONFIG_UUID=${cfg.CANDY_MACHINE_CONFIG_UUID}`);
+  console.log(`CANDY_MACHINE_CONFIG_ADDRESS=${cfg.CANDY_MACHINE_CONFIG_ADDRESS}`);
+  console.log(`CANDY_MACHINE_CONFIG_ID=${cfg.CANDY_MACHINE_CONFIG_ID}`);
 
   fs.writeFileSync(`./candyMachine_${res.candyMachineId}.json`, JSON.stringify(cfg, null, 2));
 }
