@@ -1,17 +1,35 @@
 import * as anchor from '@project-serum/anchor';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import fs from 'fs';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import makePrompt from 'prompt-sync';
 
 import { CREATOR_ADDRESS, SOLANA_ENV } from './env';
 import { bootstrap } from './metaplex';
 import { walletKeyPair } from './solana';
 import { createMetaplexManifest } from './utils';
 
+const prompt = makePrompt();
+
 main();
 
 // ///////////////////////////////////////////////////////////////////
 
 async function main() {
+  const items = 1000;
+
+  console.log('cluster:', SOLANA_ENV);
+  console.log('signer:', walletKeyPair.publicKey.toBase58());
+  console.log('creator address:', CREATOR_ADDRESS);
+  console.log('items:', items);
+
+  const userInput = prompt('Does the above look good? (Y/n): ', 'Y');
+
+  if (userInput !== 'Y') {
+    console.log('Stopping');
+    return;
+  }
+
   const manifest = createMetaplexManifest({
     name: 'Anna',
     id: 1,
@@ -27,7 +45,7 @@ async function main() {
     walletKeyPair,
     manifest,
     env: SOLANA_ENV,
-    items: 1000,
+    items,
   });
 
   const balanceAfter = await connection.getBalance(walletKeyPair.publicKey);

@@ -7,8 +7,8 @@
     "node": ">=14"
   },
   "scripts": {
-    "metaplexBootstrap": "ts-node src/metaplexBootstrap.ts",
-    "metaplexVerify": "ts-node src/metaplexVerify.ts",
+    "metaplex:bootstrap": "ts-node src/metaplexBootstrap.ts",
+    "metaplex:verify": "ts-node src/metaplexVerify.ts",
     "upload": "ts-node src/metaplex/init/uploadWithCert.ts",
     "eslint": "eslint src/index.ts",
     "build": "tsc",
@@ -63,6 +63,7 @@
     "@types/morgan": "^1.9.2",
     "@types/node": "14.14.14",
     "@types/node-fetch": "^2.5.12",
+    "@types/prompt-sync": "^4.1.1",
     "@types/supertest": "2.0.10",
     "@types/swagger-ui-express": "4.1.2",
     "@typescript-eslint/eslint-plugin": "4.11.0",
@@ -73,6 +74,7 @@
     "eslint-plugin-import": "2.22.1",
     "jest": "26.6.3",
     "jest-express": "1.12.0",
+    "prompt-sync": "^4.2.0",
     "rimraf": "^3.0.2",
     "supertest": "6.0.1",
     "ts-jest": "26.4.4",

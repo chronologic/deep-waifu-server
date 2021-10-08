@@ -57,7 +57,7 @@ Run `npm install`
 
 To create and initialize the [Metaplex Candy Machine](https://hackmd.io/@levicook/HJcDneEWF) run
 
-`npm run metaplexBootstrap`
+`npm run metaplex:bootstrap`
 
 You must ensure you have at least 5 SOL in your wallet to cover the deployment cost. Once the process has finished, it will save create a file called `candyMachine_<candy_machine_id>.json` with all relevant addresses in the main directory. You can then put those in the `.env` file.
 
